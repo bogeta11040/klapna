@@ -184,6 +184,23 @@ wss.on("connection", (ws) => {
       return;
     }
 
+    if (type === "STOP_AT") {
+  if (!ws._isMaster) {
+    send(ws, { type: "ERROR", code: "NOT_MASTER" });
+    return;
+  }
+  const tsServerMs = msg.tsServerMs;
+  if (typeof tsServerMs !== "number") {
+    send(ws, { type: "ERROR", code: "BAD_TIMESTAMP" });
+    return;
+  }
+  for (const [, clientWs] of room.clients.entries()) {
+    send(clientWs, { type: "STOP_AT", roomId, tsServerMs });
+  }
+  return;
+}
+
+
     // Optional: ACK_START pass to master
     if (type === "ACK_START") {
       const masterWs = room.clients.get(room.masterId);
